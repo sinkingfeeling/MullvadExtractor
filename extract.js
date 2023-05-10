@@ -10,6 +10,13 @@ function sleep(ms) {
     for (const iconElement of expandableIconElements) {
         const parentElement = iconElement.parentElement;
         if (parentElement) {
+            // Scroll the parent element into view
+            parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Wait for 500ms before clicking the element to account for scrolling and rendering
+            await sleep(500);
+
+            // Click the element to expand it
             parentElement.click();
         }
 
