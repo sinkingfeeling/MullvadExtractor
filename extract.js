@@ -3,8 +3,6 @@ function sleep(ms) {
 }
 
 async function main() {
-    const exportFormat = 'csv'; // Change this to 'json' for JSON format
-
     try {
         await sleep(3000);
 
@@ -14,19 +12,21 @@ async function main() {
         }
 
         const expandableIconElements = document.querySelectorAll('.expanding-icon');
-        const extractedData = new Set();
+        const extractedData = [];
 
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach((node) => {
                         if (node.nodeType === Node.ELEMENT_NODE && node.querySelector('.servers-dl')) {
+                            const hostnameElement = node.querySelector('.servers-dl .dt:contains("Domain name") + .dd');
                             const ipElement = node.querySelector('.servers-dl .dt.no-uppercase + .dd');
-                            if (ipElement) {
+                            if (hostnameElement && ipElement) {
+                                const hostname = hostnameElement.innerText;
                                 const ip = ipElement.innerText;
-                                extractedData.add(ip);
+                                extractedData.push({ hostname, ip });
                             } else {
-                                console.warn('Could not find the IPv4 element in the expanded div:', node);
+                                console.warn('Could not find the hostname or IPv4 element in the expanded div:', node);
                             }
                         }
                     });
@@ -55,17 +55,10 @@ async function main() {
 
         observer.disconnect();
 
-        let output = '';
-        const uniqueIPs = Array.from(extractedData);
-        if (exportFormat === 'csv') {
-            output = 'IP\n' + uniqueIPs.join('\n');
-        } else if (exportFormat === 'json') {
-            output = JSON.stringify(uniqueIPs, null, 2);
-        } else {
-            throw new Error('Invalid export format');
-        }
+        // Export data as CSV
+        const csvContent = extractedData.map(({ hostname, ip }) => `${hostname},${ip}`).join('\n');
+        console.log('Extracted data as CSV:\n' + csvContent);
 
-        console.log('Extracted IP addresses in ' + exportFormat.toUpperCase() + ' format:', output);
     } catch (error) {
         console.error('An error occurred during script execution:', error);
     }
