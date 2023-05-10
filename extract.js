@@ -2,20 +2,29 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function elementInViewport(el) {
-    const rect = el.getBoundingClientRect();
-    return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-    );
+async function scrollToBottom() {
+    const checkInterval = 500;
+    let previousHeight = document.documentElement.scrollHeight;
+
+    while (true) {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        await sleep(checkInterval);
+
+        const currentHeight = document.documentElement.scrollHeight;
+        if (previousHeight === currentHeight) {
+            break;
+        }
+        previousHeight = currentHeight;
+    }
 }
 
 (async function() {
     try {
         // Wait for 3 seconds before starting the script execution
         await sleep(3000);
+
+        // Scroll to the bottom of the page to load all elements
+        await scrollToBottom();
 
         // Find all elements with the class expanding-icon
         const expandableIconElements = document.querySelectorAll('.expanding-icon');
@@ -24,15 +33,7 @@ function elementInViewport(el) {
         for (const iconElement of expandableIconElements) {
             const parentElement = iconElement.parentElement;
             if (parentElement) {
-                // Check if the element is not in the viewport, then scroll it into view
-                if (!elementInViewport(parentElement)) {
-                    parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                    // Wait for the element to be in the viewport
-                    while (!elementInViewport(parentElement)) {
-                        await sleep(100);
-                    }
-                }
+                parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
                 // Wait for 800ms before clicking the element to account for scrolling and rendering
                 await sleep(800);
