@@ -3,6 +3,8 @@ function sleep(ms) {
 }
 
 async function main() {
+    const exportFormat = 'csv'; // Change this to 'json' for JSON format
+
     try {
         await sleep(3000);
 
@@ -12,7 +14,7 @@ async function main() {
         }
 
         const expandableIconElements = document.querySelectorAll('.expanding-icon');
-        const extractedData = [];
+        const extractedData = new Set();
 
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
@@ -22,9 +24,7 @@ async function main() {
                             const ipElement = node.querySelector('.servers-dl .dt.no-uppercase + .dd');
                             if (ipElement) {
                                 const ip = ipElement.innerText;
-                                if (!extractedData.includes(ip)) {
-                                    extractedData.push(ip);
-                                }
+                                extractedData.add(ip);
                             } else {
                                 console.warn('Could not find the IPv4 element in the expanded div:', node);
                             }
@@ -55,7 +55,17 @@ async function main() {
 
         observer.disconnect();
 
-        console.log('Extracted IP addresses:', extractedData);
+        let output = '';
+        const uniqueIPs = Array.from(extractedData);
+        if (exportFormat === 'csv') {
+            output = 'IP\n' + uniqueIPs.join('\n');
+        } else if (exportFormat === 'json') {
+            output = JSON.stringify(uniqueIPs, null, 2);
+        } else {
+            throw new Error('Invalid export format');
+        }
+
+        console.log('Extracted IP addresses in ' + exportFormat.toUpperCase() + ' format:', output);
     } catch (error) {
         console.error('An error occurred during script execution:', error);
     }
