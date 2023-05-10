@@ -18,8 +18,8 @@ async function main() {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === Node.ELEMENT_NODE && node.matches('.virtual-scroll-item > div[style=""]')) {
-                            const ipElement = node.querySelector('.dd');
+                        if (node.nodeType === Node.ELEMENT_NODE && node.querySelector('.servers-dl')) {
+                            const ipElement = node.querySelector('.servers-dl .dd');
                             if (ipElement) {
                                 const ip = ipElement.innerText;
                                 extractedData.push(ip);
