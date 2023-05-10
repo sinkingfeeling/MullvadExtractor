@@ -4,7 +4,6 @@ function sleep(ms) {
 
 async function main() {
     try {
-        // Wait for 3 seconds before starting the script execution
         await sleep(3000);
 
         const container = document.querySelector('div[style*="overflow-y: auto"]');
@@ -15,39 +14,46 @@ async function main() {
         const expandableIconElements = document.querySelectorAll('.expanding-icon');
         const extractedData = [];
 
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE && node.matches('.virtual-scroll-item > div[style=""]')) {
+                            const ipElement = node.querySelector('.dd');
+                            if (ipElement) {
+                                const ip = ipElement.innerText;
+                                extractedData.push(ip);
+                            } else {
+                                console.warn('Could not find the IP element in the expanded div:', node);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        observer.observe(container, { childList: true, subtree: true });
+
         for (const iconElement of expandableIconElements) {
             const parentElement = iconElement.parentElement;
             if (parentElement) {
                 parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                // Wait for 800ms before clicking the element to account for scrolling and rendering
                 await sleep(800);
 
-                // Click the element to expand it
                 parentElement.click();
 
-                // Wait for the hidden div to appear
                 await sleep(800);
 
-                // Extract the data you want from the expanded div
-                const expandedDiv = document.querySelector('.virtual-scroll-item[style=""] > div');
-                if (expandedDiv) {
-                    // Replace this with the actual data extraction logic
-                    const domainName = expandedDiv.querySelector('.dt')?.innerText;
-                    const ipv4 = expandedDiv.querySelector('.dd')?.innerText;
-
-                    extractedData.push({ domainName, ipv4 });
-                }
-
-                // Click the element again to collapse it
                 parentElement.click();
 
-                // Wait for 400ms before clicking the next element
                 await sleep(400);
             }
         }
 
-        console.log('Extracted data:', extractedData);
+        observer.disconnect();
+
+        console.log('Extracted IP addresses:', extractedData);
     } catch (error) {
         console.error('An error occurred during script execution:', error);
     }
