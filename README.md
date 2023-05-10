@@ -11,42 +11,57 @@
 
 Extract IPv4 addresses from Mullvad's server page
 
-1.  Version 0.1.0:
+Alpha Phase
+Version 0.1.0-alpha:
 
 -   Initial attempt using querySelector to find the "dd" elements containing IP addresses.
 -   Issue: Extracted an empty array since it could not find the "dd" elements due to the expandable sections not being opened.
 
-2.  Version 0.2.0:
+Version 0.2.0-alpha:
 
 -   Modified the approach to first click on the expandable sections to reveal the hidden IP addresses.
 -   Issue: The code did not wait for the expandable sections to open, and it still extracted an empty array.
 
-3.  Version 0.3.0:
+Version 0.3.0-alpha:
 
--   Introduced sleep function and async/await to handle delays between clicks and extraction.
--   Issue: The code successfully expanded the sections but did not extract the IP addresses.
+-   Introduced sleep function and async/await to wait for elements to load after clicking on the expandable sections.
+-   Issue: IP addresses were still not being extracted consistently.
 
-4.  Version 0.4.0:
+Version 0.4.0-alpha:
 
--   Used MutationObserver to monitor the DOM changes and extract IP addresses when the expandable sections were opened.
--   Issue: It extracted all information but the desired IPv4 addresses.
+-   Implemented MutationObserver to detect when the IP address elements are added to the DOM.
+-   Issue: The script was capturing the IP addresses multiple times, leading to duplicated entries.
 
-5.  Version 0.5.0:
+Beta Phase
 
--   Improved the selector to specifically target the IPv4 addresses.
--   Issue: It extracted the IPv4 addresses but with duplicates.
+Version 0.5.0-beta:
 
-6.  Version 0.6.0:
+-   Fixed duplication issues by properly disconnecting the observer after extracting the data.
+-   Issue: None; successfully extracted the IP addresses as an array.
 
--   Added a Set to store extracted IP addresses to eliminate duplicates.
--   Issue: Although the code worked, it still occasionally logged a warning when it could not find the IPv4 element in the expanded div.
+Version 0.6.0-beta:
 
-7.  Version 0.7.0:
+-   Extracted the IP addresses as JSON.
+-   Issue: Required different output format.
 
--   Introduced the option to export the extracted data in either CSV or JSON format.
+Version 0.7.0-beta:
 
-8.  Version 1.0.0:
+-   Extracted the IP addresses as CSV.
+-   Issue: Additional data (hostname) needed to be extracted.
 
--   Code optimization to improve reliability in extracting unique IP addresses and providing output in CSV or JSON format without duplication.
+Version 0.8.0-beta:
 
-This is the final version that works as expected and provides the desired output.
+-   Added hostname extraction.
+-   Issue: Invalid selector error for the hostname extraction.
+
+Version 0.9.0-beta:
+
+-   Fixed the invalid selector error for the hostname extraction.
+-   Issue: Output format needed to be adjusted.
+
+Stable Release
+
+Version 1.0.0:
+
+-   Modified the script to place the hostname before the IP address in the CSV output.
+-   Issue: None; successfully extracted hostname and IP address in the desired format.
