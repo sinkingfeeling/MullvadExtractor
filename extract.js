@@ -1,44 +1,64 @@
-async function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function waitForElement(selector, parentElement, timeout = 5000) {
-  const startTime = Date.now();
-  while (Date.now() - startTime < timeout) {
-    const element = parentElement.querySelector(selector);
-    if (element) return element;
-    await sleep(100);
-  }
-  throw new Error(`Element not found within ${timeout}ms: ${selector}`);
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function main() {
-  const expandIcons = document.querySelectorAll('.expand-icon');
-  const extractedIPs = [];
+    try {
+        await sleep(3000);
 
-  for (const icon of expandIcons) {
-    icon.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    icon.click();
+        const container = document.querySelector('div[style*="overflow-y: auto"]');
+        if (!container) {
+            throw new Error('Could not find the container element');
+        }
 
-    const parentElement = icon.closest('.virtual-scroll-item');
-    const expandedDiv = await waitForElement('.expanded', parentElement);
+        const expandableIconElements = document.querySelectorAll('.expanding-icon');
+        const extractedData = [];
 
-    if (!expandedDiv) {
-      console.error('Could not find the expanded div');
-      continue;
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE && node.querySelector('.servers-dl')) {
+                            const ipElement = node.querySelector('.servers-dl .dt.no-uppercase + .dd');
+                            if (ipElement) {
+                                const ip = ipElement.innerText;
+                                if (!extractedData.includes(ip)) {
+                                    extractedData.push(ip);
+                                }
+                            } else {
+                                console.warn('Could not find the IPv4 element in the expanded div:', node);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        observer.observe(container, { childList: true, subtree: true });
+
+        for (const iconElement of expandableIconElements) {
+            const parentElement = iconElement.parentElement;
+            if (parentElement) {
+                parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                await sleep(800);
+
+                parentElement.click();
+
+                await sleep(800);
+
+                parentElement.click();
+
+                await sleep(400);
+            }
+        }
+
+        observer.disconnect();
+
+        console.log('Extracted IP addresses:', extractedData);
+    } catch (error) {
+        console.error('An error occurred during script execution:', error);
     }
-
-    const ipv4Element = expandedDiv.querySelector('.servers-dl > div > .dd');
-    if (!ipv4Element) {
-      console.error('Could not find the IPv4 element in the expanded div: ', expandedDiv);
-      continue;
-    }
-
-    const ipv4 = ipv4Element.textContent.trim();
-    extractedIPs.push(ipv4);
-  }
-
-  console.log('Extracted IP addresses: ', extractedIPs);
 }
 
 main();
