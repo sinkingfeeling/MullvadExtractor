@@ -16,14 +16,14 @@ async function main() {
                     mutation.addedNodes.forEach((node) => {
                         if (node.nodeType === Node.ELEMENT_NODE && node.querySelector('.servers-dl')) {
                             const ipElement = node.querySelector('.servers-dl .dt.no-uppercase + .dd');
-                            const hostnameElement = node.querySelector('.servers-dl .dt:contains("Domain name") + .dd');
+                            const domainElement = Array.from(node.querySelectorAll('.servers-dl .dt')).find(el => el.textContent === "Domain name");
+                            const domainText = domainElement ? domainElement.nextElementSibling.textContent : "Not found";
                             
-                            if (ipElement && hostnameElement) {
+                            if (ipElement) {
                                 const ip = ipElement.innerText;
-                                const hostname = hostnameElement.innerText;
-                                extractedData.push({ ip, hostname });
+                                extractedData.push({ domain: domainText, ip });
                             } else {
-                                console.warn('Could not find the IPv4 or hostname element in the expanded div:', node);
+                                console.warn('Could not find the IPv4 element in the expanded div:', node);
                             }
                         }
                     });
@@ -33,7 +33,8 @@ async function main() {
 
         observer.observe(container, { childList: true, subtree: true });
 
-        for (const iconElement of expandableIconElements) {
+        for (let i = 0; i < expandableIconElements.length; i++) {
+            const iconElement = expandableIconElements[i];
             const parentElement = iconElement.parentElement;
             if (parentElement) {
                 parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -43,16 +44,38 @@ async function main() {
                 parentElement.click();
 
                 await sleep(800);
-
-                parentElement.click();
-
-                await sleep(400);
             }
         }
 
         observer.disconnect();
 
-        console.log('Extracted IP addresses and hostnames:', extractedData);
+        // Remove duplicate entries from extractedData
+        const uniqueData = [];
+        const uniqueDomains = new Set();
+        for (const data of extractedData) {
+            if (!uniqueDomains.has(data.domain)) {
+                uniqueDomains.add(data.domain);
+                uniqueData.push(data);
+            }
+        }
+
+        // Convert uniqueData to CSV format
+        const headers = Object.keys(uniqueData[0]).join(",");
+        const csvData = uniqueData.map(obj => Object.values(obj).join(",")).join("\n");
+        const csvContent = `${headers}\n${csvData}`;
+
+        // Create a blob object from the CSV content and download it as a file
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "vpn-servers.csv");
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        console.log('Data has been downloaded as a CSV file.');
     } catch (error) {
         console.error('An error occurred during script execution:', error);
     }
