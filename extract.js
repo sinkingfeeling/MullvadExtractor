@@ -1,7 +1,3 @@
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 async function main() {
     try {
         await sleep(3000);
@@ -19,14 +15,15 @@ async function main() {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach((node) => {
                         if (node.nodeType === Node.ELEMENT_NODE && node.querySelector('.servers-dl')) {
-                            const hostnameElement = node.querySelector('.servers-dl .dt:contains("Domain name") + .dd');
                             const ipElement = node.querySelector('.servers-dl .dt.no-uppercase + .dd');
-                            if (hostnameElement && ipElement) {
-                                const hostname = hostnameElement.innerText;
+                            const hostnameElement = node.querySelector('.servers-dl .dt:contains("Domain name") + .dd');
+                            
+                            if (ipElement && hostnameElement) {
                                 const ip = ipElement.innerText;
-                                extractedData.push({ hostname, ip });
+                                const hostname = hostnameElement.innerText;
+                                extractedData.push({ ip, hostname });
                             } else {
-                                console.warn('Could not find the hostname or IPv4 element in the expanded div:', node);
+                                console.warn('Could not find the IPv4 or hostname element in the expanded div:', node);
                             }
                         }
                     });
@@ -55,10 +52,7 @@ async function main() {
 
         observer.disconnect();
 
-        // Export data as CSV
-        const csvContent = extractedData.map(({ hostname, ip }) => `${hostname},${ip}`).join('\n');
-        console.log('Extracted data as CSV:\n' + csvContent);
-
+        console.log('Extracted IP addresses and hostnames:', extractedData);
     } catch (error) {
         console.error('An error occurred during script execution:', error);
     }
