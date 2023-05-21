@@ -1,7 +1,3 @@
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 async function main() {
     try {
         await sleep(3000);
@@ -22,7 +18,7 @@ async function main() {
                             const ipElement = node.querySelector('.servers-dl .dt.no-uppercase + .dd');
                             const domainElement = Array.from(node.querySelectorAll('.servers-dl .dt')).find(el => el.textContent === "Domain name");
                             const domainText = domainElement ? domainElement.nextElementSibling.textContent : "Not found";
-                            
+
                             if (ipElement) {
                                 const ip = ipElement.innerText;
                                 extractedData.push({ domain: domainText, ip });
@@ -48,6 +44,10 @@ async function main() {
                 parentElement.click();
 
                 await sleep(800);
+
+                parentElement.click();
+
+                await sleep(400);
             }
         }
 
